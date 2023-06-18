@@ -16,15 +16,6 @@ steps to create mongodb
  docker start DigitalAirlines
  docker exec -it DigitalAirlines mongosh
 
-# TODO:
-δημιουργία ιστοσελίδας μετά την είσοδο στο σύστημα
-
-Αλλαγή της προβολής λάθων πεδίων κατά την ενέργεια του signup
-δημιουργία ενέργειας αποσύνδεσης (προσθήκη στο navigator)
-
-Δημιουργία worker που θα βγάζει το session key μετά από 30 λεπτά αδράνειας και
-θα κάνει reset μετά από κάποια ενέργεια.
-
 """
 
 
