@@ -53,6 +53,7 @@ client = MongoClient('mongodb://localhost:27017/DigitalAirlines')["DigitalAirlin
 accounts = client["accounts"]
 users = client["users"]
 sessions = client["sessions"]
+flights = client["flights"]
 
 
 @app.route('/login', methods=['GET', 'POST'])
@@ -138,26 +139,79 @@ def signup():
 @app.route('/signout', methods=['POST'])
 def signout():
     data = request.get_json()
+    try:
+        username = data["username"]
+        session_key = data["session-key"]
+    except KeyError:
+        return {"status": "failure", "message": "Invalid parameters"}
 
-    username = data["username"]
-    session_key = data["session-key"]
 
     id = accounts.find_one({"username": username})
     if not id:
-        return {"status": "failure", "message": "cant find account"}
+        return {"status": "failure", "message": "Invalid parameters"} # cant find account
 
     pair = sessions.find_one({"id": id["id"], "session-key": session_key})
     if not pair:
-        return {"status": "failure", "message": "cant find pair"}
+        return {"status": "failure", "message": "Invalid parameters"} # cant find pair (id, session-key)
 
     sessions.delete_one({"id": id["id"], "session-key": session_key})
 
     return {"status": "success", "message": "Session terminated!"}
 
 
-@app.route('/search/<parameters>', methods=['POST'])
+@app.route('/search', methods=['POST'])
 def search():
-    pass
+    data = request.get_json()
+    print(data)
+
+    try:
+        airport_from = data["airport-origin"]
+        airport_to = data["airport-destination"]
+        date = data["date"]
+    except KeyError:
+        return {"status": "failure", "message": "Invalid parameters"}
+
+    """
+    data validation
+    """
+
+    a=0
+    if airport_from: a+=1
+    if airport_to: a+=2
+    if date: a+=4
+
+    """
+    Our data are valid only when:
+        1. We have all 3 parameters
+        2. Only the airports origin-destination
+        3. Only date
+        4. All 3 are blank
+
+    based on the above sum, the a will have value per situation as:
+        1. 1+2+4 = 7
+        2. 1+2 = 3
+        3. 4
+        4. 0
+    Every other value of a means invalid data
+    """
+    if a not in (0,3,4,7):
+        return {"status": "failure", "message": "Invalid parameters"}
+
+    search = {}
+    # if a == 0 then search filter is ready
+
+    if a in (1,2):
+        search["airport-origin"] = airport_from
+        search["airport-destination"] = airport_to
+
+    if a in (1,3):
+        search["date"] = date
+
+    records = flights.find(search)
+    records.pop("_id")
+
+    return records
+
 
 @app.route('/flight/<id>', methods=['GET'])
 def get_flight(id):
