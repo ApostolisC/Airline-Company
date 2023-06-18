@@ -1,0 +1,593 @@
+<html lang="el">
+
+<head>
+<title>Digital Airlines</title>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="icon" type="image/png" href="images/icons/favicon.ico">
+
+
+<style media="screen">
+
+
+
+html {
+  height:100%;
+  font-family:sans-serif;
+  background:-webkit-linear-gradient(45deg,#2c3e50,#425D78);
+  background:-o-linear-gradient(45deg,#2c3e50,#425D78);
+  background:-moz-linear-gradient(45deg,#2c3e50,#425D78);
+  background:linear-gradient(45deg,#2c3e50,#425D78);
+}
+
+
+a:link {
+      text-decoration: none;
+      color: white;
+}
+
+a:visited {
+      text-decoration: none;
+      color: white;
+}
+
+a {
+  margin:0;
+  transition:all .4s;
+  -webkit-transition:all .4s;
+  -o-transition:all .4s;
+  -moz-transition:all .4s;
+  font-size:20px;
+}
+
+a:focus {
+  outline:none!important
+}
+
+a:hover {
+  text-decoration:none
+}
+
+h1{
+  text-align: center;
+  font-size: 30px;
+  color: #ecf0f1;
+  text-shadow: 2px 2px 4px #000000;
+  font-family: 'Cherry Swash', cursive;
+}
+
+h5 {
+  text-align: center;
+  font-size: 20px;
+  margin-top: 0px;
+  color: #ecf0f1;
+  text-shadow: 2px 2px 4px #000000;
+  font-family: 'Cherry Swash', cursive;
+}
+
+p {
+  margin:0
+}
+
+ul,
+li {
+  margin:0;
+  list-style-type:none
+}
+
+nav {
+    position: relative;
+    width: 100%;
+    height: 50px;
+    background-color: #34495e;
+    border-radius: 8px;
+    font-size: 20;
+    color: #ffffff;
+    display: flex;
+    justify-content: flex-end;
+}
+
+.vana {
+   margin-right: 15px;
+   margin-top: 10px;
+}
+
+input {
+  display:block;
+  outline:none;
+  border:none!important
+}
+
+textarea {
+  display:block;
+  outline:none
+}
+
+textarea:focus,
+input:focus {
+  border-color:transparent!important
+}
+
+button {
+  outline:none!important;
+  border:none;
+  background:0 0
+}
+
+button:hover {
+  cursor:pointer
+}
+
+iframe {
+  border:none!important
+}
+
+.limiter {
+  width:100%;
+  margin:0 auto
+}
+
+.container-table {
+  width: 100%;
+  align-items: flex-start; /* Align the items to the top */
+  justify-content: center;
+  flex-wrap: wrap;
+  padding: 0 30px;
+  overflow: auto;
+  height: 70vh;
+  margin-left: 20px;
+
+
+}
+
+.wrap-table {
+  width:1170px;
+  overflow: auto;
+}
+
+table {
+  border-spacing:1;
+  border-collapse:collapse;
+  background:#fff;
+  border-radius:10px;
+  overflow:hidden;
+  width:100%;
+  margin:0 auto;
+  position:relative;
+
+
+
+}
+
+table * {
+  position:relative;
+  min-height: 600px;
+
+}
+
+table td{
+  padding-left:8px;
+  height: 60;
+  text-align:left;
+}
+
+table th {
+  padding-left:8px;
+  height:80;
+  text-align:left;
+}
+
+table thead tr {
+  height:60px;
+  background:#4682B4
+}
+
+table tbody tr {
+  height:70px
+}
+
+table tbody tr:last-child {
+  border:0;
+}
+
+
+table td.l,
+table th.l {
+  text-align:right
+}
+table td.c,
+
+table th.c {
+  text-align:center
+}
+
+table td.r,
+table th.r {
+  text-align:center
+}
+
+.table-head th {
+  font-family: 'Arial', sans-serif; /* Change the font-family here */
+  font-size: 18px;
+  color: #fff;
+  line-height: 1.2;
+  font-weight: unset;
+}
+
+tbody tr:nth-child(even) {
+  background-color:#f5f5f5
+}
+
+tbody tr {
+  font-family:OpenSans-Regular;
+  font-size:15px;
+  color:gray;
+  line-height:1.2;
+  font-weight:unset
+}
+
+tbody tr:hover {
+  color:#555;
+  background-color:#f5f5f5;
+  cursor:pointer
+}
+
+.column1 {
+  width:260px;
+  padding-left:40px
+}
+.column2 {
+  width:160px
+}
+.column3 {
+  width:245px
+}
+.column4 {
+  width:110px;
+  text-align:right
+}
+.column5 {
+  width:170px;
+  text-align:right
+}
+.column6 {
+  width:222px;
+  text-align:right;
+  padding-right:62px
+}
+@media screen and (max-width:992px) {
+table {
+  display:block;
+}
+table>*,
+table tr,
+table td,
+table th {
+  display:block
+}
+table thead {
+  display:none;
+
+}
+table tbody tr {
+  height:auto;
+  padding:37px 0
+}
+table tbody tr td {
+  padding-left:40%!important;
+  margin-bottom:24px
+}
+table tbody tr:nth-child(even) {
+    background-color: #f5f5f5;
+}
+table tbody tr td:last-child {
+  margin-bottom:0;
+}
+table tbody tr td:before {
+  font-family:OpenSans-Regular;
+  font-size:14px;
+  color:#999;
+  line-height:1.2;
+  font-weight:unset;
+  position:absolute;
+  width:40%;
+  left:30px;
+  top:0
+}
+table tbody tr td:nth-child(1):before {
+  content:"from"
+}
+table tbody tr td:nth-child(2):before {
+    content:"To"
+}
+table tbody tr td:nth-child(3):before {
+    content:"Date"
+}
+table tbody tr td:nth-child(4):before {
+  content:"Price"
+}
+table tbody tr td:nth-child(5):before {
+  content:"Quantity"
+}
+table tbody tr td:nth-child(6):before {
+  content:"Total"
+}
+
+.column4,
+.column5,
+.column6 {
+  text-align:left
+}
+.column4,
+.column5,
+.column6,
+.column1,
+.column2,
+.column3 {
+  width:100%
+}
+tbody tr {
+  font-size:14px
+}
+}
+
+@media(max-width:576px) {
+.container-table {
+  padding-left:15px;
+  padding-right:15px
+}
+
+}
+
+
+
+body .float-container{
+  display: flex;
+  margin-left: 50px;
+  margin-top: -60px;
+}
+
+.flight_info_container{
+  margin-top: 30px;
+  width:510px;
+  padding: 0 15 15 15;
+  height: 32vh;
+  border: 2px solid white;
+  color: white
+}
+
+.search-form{
+  flex: 1;
+  width: 500px;
+  height: 365px;
+  opacity: 90%;
+
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  padding: 20px;
+
+
+
+}
+
+.select_airport{
+  width: 95%;
+  height: 40px;
+  margin-left: 10px;
+}
+
+.search-label{
+  margin-left: 10px;
+  color: white;
+}
+
+.departure_date_search{
+  margin-left: 10px;
+  height: 30px;
+  width: 95%;
+}
+
+/* A few custom styles for date inputs */
+input[type="date"] {
+    appearance: none;
+    -webkit-appearance: none;
+    color: #95a5a6;
+    font-family: "Helvetica", arial, sans-serif;
+    font-size: 18px;
+    border:1px solid #ecf0f1;
+    background:#ecf0f1;
+    padding:5px;
+    display: inline-block !important;
+    visibility: visible !important;
+}
+
+input[type="date"], focus {
+    color: black;
+    box-shadow: none;
+    -webkit-box-shadow: none;
+    -moz-box-shadow: none;
+}
+
+.button-search{
+  color: white;
+  border: 2px solid;
+  width: 100px;
+  height: 40px;
+  margin-left: 10px;
+  font-size: 18px;
+
+}
+
+.flight_info_container p {
+  display: inline;
+  font-size: 18px;
+  margin-right: 20px;
+  gap: 10px;
+  flex-direction: column;
+}
+
+.first-p{
+  font-weight: bold;
+  flex-basis: 80px;
+}
+
+</style>
+</head>
+<body>
+  <br>
+  <nav>
+    <a href="#" class="vana">Reservations</a>
+    <a href="#" class="vana">Account</a>
+    <div class="nav"></div>
+  </nav>
+
+  <h1>Digital Airlines</h1>
+  <h5>For a flight to the future</h5>
+
+  <br>
+
+  <h2 style="color: white; display: block; margin-left: 60px; margin-bottom: 0px;"> Flight searching </h2>
+  <br>
+  <div class="float-container">
+
+    <div class="search-div">
+      <div class="search-form" id="search-form">
+        <br><br>
+
+        <p class="search-label"> Where from? </p>
+        <br>
+        <select class="select_airport" name="from">
+
+        </select>
+
+        <br><br>
+
+        <p class="search-label"> Where to? </p>
+        <br>
+        <select class="select_airport" name="destination">
+
+        </select>
+
+        <br><br>
+
+        <p class="search-label"> Departure date </p>
+        <br>
+        <input type="date" class="departure_date_search" name="departure_date_search" value="">
+
+        <br><br>
+        <button type="button" name="button" class="button-search">Search</button>
+        <button type="button" name="button" class="button-search">Show all</button>
+      </div>
+      <div class="flight_info_container">
+
+        <h2 style="margin-top: 10px;"> Flight Information </h2>
+        <hr>
+
+        <br>
+
+        <p class="first-p"> Flight ID: </p>
+        <p id="flight_id"> 21090-29109-02910 </p>
+
+        <br>
+        <br>
+
+        <p class="first-p"> From: </p>
+        <p id="flight_start"> Another world (AWL) </p>
+
+        <br>
+        <br>
+
+        <p class="first-p"> To: </p>
+        <p id="flight_dest"> Another world (AWL) <p>
+
+
+
+      </div>
+
+    </div>
+
+    <div class="container-table">
+      <div class="wrap-table">
+        <div class="table">
+            <table id="flights">
+            <thead>
+                <tr class="table-head">
+                    <th class="column1">From</th>
+                    <th class="column2">To</th>
+                    <th class="column3">Name</th>
+                    <th class="column4">Price</th>
+                    <th class="column5">Quantity</th>
+                    <th class="column6">Total</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="column1">2017-09-29 01:22</td>
+                    <td class="column2">200398</td>
+                    <td class="column3">iPhone X 64Gb Grey</td>
+                    <td class="column4">$999.00</td>
+                    <td class="column5">1</td>
+                    <td class="column6">$999.00</td>
+                </tr>
+            </tbody>
+            </table>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  </div>
+
+
+
+
+  <!--<script>
+  	  window.dataLayer = window.dataLayer || [];
+  	  function gtag(){dataLayer.push(arguments);}
+  	  gtag('js', new Date());
+
+  	  gtag('config', 'UA-23581568-13');
+  	</script>
+  <script defer="" src="https://static.cloudflareinsights.com/beacon.min.js/v52afc6f149f6479b8c77fa569edb01181681764108816" integrity="sha512-jGCTpDpBAYDGNYR5ztKt4BQPGef1P0giN6ZGVUi835kFF88FOmmn8jBQWNgrNd8g/Yu421NdgWhwQoaOPFflDw==" data-cf-beacon="{&quot;rayId&quot;:&quot;7d6b47c81a96eea4&quot;,&quot;token&quot;:&quot;cd0b4b3a733644fc843ef0b185f98241&quot;,&quot;version&quot;:&quot;2023.4.0&quot;,&quot;si&quot;:100}" crossorigin="anonymous"></script>
+-->
+
+</body>
+<script>
+   function addTestData() {
+     console.log("test");
+      // Get the table element in which you want to add row
+      let table = document.getElementById("flights");
+
+      // Create a row using the inserRow() method and
+      // specify the index where you want to add the row
+      for (let i=0; i<15; i++){
+        let row = table.insertRow(-1); // We are adding at the end
+
+        // Create table cells
+        let c1 = row.insertCell(0);
+        c1.classList.add("column1");
+        let c2 = row.insertCell(1);
+        c2.classList.add("column2");
+        let c3 = row.insertCell(2);
+        c3.classList.add("column3");
+        let c4 = row.insertCell(3);
+        c4.classList.add("column4");
+        let c5 = row.insertCell(4);
+        c5.classList.add("column5");
+        let c6 = row.insertCell(5);
+        c6.classList.add("column6");
+
+        // Add data to c1 and c2
+        c1.innerText = "Test"
+        c2.innerText = "Test"
+        c3.innerText = "Test"
+        c4.innerText = "Test"
+        c5.innerText = "Test"
+        c6.innerText = "Test"
+      }
+   }
+    window.onload = addTestData;
+</script>
+</html>

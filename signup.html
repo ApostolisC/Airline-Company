@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="en" >
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+  <title>Classic Login Form Example</title>
+  <!--<link href="https://fonts.googleapis.com/css?family=Assistant:400,700" rel="stylesheet"><link rel="stylesheet" href="./style.css"> -->
+
+  <style media="screen">
+      body {
+        background: #ABCDEF;
+        font-family: Assistant, sans-serif;
+        display: flex;
+        min-height: 90vh;
+      }
+      .login {
+        color: white;
+        background: background: #136a8a;
+        background:
+          -webkit-linear-gradient(to right, #267871, #136a8a);
+        background:
+          linear-gradient(to right, #267871, #136a8a);
+        margin: auto;
+        box-shadow:
+          0px 2px 10px rgba(0,0,0,0.2),
+          0px 10px 20px rgba(0,0,0,0.3),
+          0px 30px 60px 1px rgba(0,0,0,0.5);
+        border-radius: 8px;
+        padding: 60px;
+      }
+      .login .head {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      .login .head .company {
+        font-size: 2.7em;
+      }
+      .login .msg {
+        text-align: center;
+      }
+      .login .form input[type=text].text, .login .form input[type=date].text,
+      .login .form input[type=password].text {
+        border: none;
+        background: none;
+        box-shadow: 0px 2px 1px 0px white;
+        width: 100%;
+        color: white;
+        font-size: 1.2em;
+        outline: none;
+        margin-bottom: 20px;
+      }
+      .login .form .text::placeholder {
+        color: #D3D3D3;
+      }
+      #dob{
+        margin-bottom: 10px;
+      }
+      .login .form input[type=password].password, .login .form input[type=password].password_ver{
+        border: none;
+        background: none;
+        box-shadow: 0px 2px 1px 0px white;
+        width: 100%;
+        color: white;
+        font-size: 1em;
+        outline: none;
+      }
+      .login .form input[type=password].password_ver{
+        margin-top: 20px;
+        margin-bottom: 20px;
+      }
+      .login .form .password .password_ver::placeholder {
+        color: #D3D3D3;
+      }
+      .login .form .btn-signup {
+        background: none;
+        text-decoration: none;
+        color: white;
+        box-shadow: 0px 0px 0px 2px white;
+        border-radius: 3px;
+        padding: 5px 2em;
+        transition: 0.5s;
+      }
+      .login .form .btn-signup:hover {
+        background: white;
+        color: dimgray;
+        transition: 0.5s;
+      }
+      .login, .btn-login, .forgot{
+        text-decoration: none;
+        color: white;
+        float: right;
+      }
+      footer {
+        position: absolute;
+        color: #136a8a;
+        bottom: 10px;
+        padding-left: 20px;
+      }
+      footer p {
+        display: inline;
+      }
+      footer a {
+        color: green;
+        text-decoration: none;
+      }
+      footer a:hover {
+        text-decoration: underline;
+      }
+      footer .heart {
+        color: #B22222;
+        font-size: 1.5em
+      }
+      .row a {
+        margin-right: 15px;
+      }
+      .btn-login {
+        border: 2px solid white;
+        padding: 3px;
+        margin-top: -3px;
+      }
+      #coo{
+        margin-top: 10px;
+        margin-bottom: 10px;
+      }
+
+
+  </style>
+
+</head>
+<body>
+<!-- partial:index.partial.html -->
+<section class='login' id='login'>
+  <div class='head'>
+  <h1 class='company'>Digital Airlines</h1>
+  </div>
+  <p class='msg' id="message"> Please fill your information below to create an account </p>
+  <div class='form'>
+    <form id="form">
+      <input type="text" placeholder='Username' class='text' id='username' required><br>
+      <input type="text" placeholder='Surname' class='text' id='surname' required><br>
+      <input type="text" placeholder='Email' class='text' id='email' required><br>
+      <input type="password" placeholder='Password' class='password' id='password' required><br>
+      <input type="password" placeholder='Password Verify' class='password_ver' id="password_ver" required><br>
+      <input type="date" placeholder='Date of Birth' class='text' id='dob' required><br>
+      <select type="text" placeholder='Country of Origin' class='coo' id='coo' required>
+        <option value="" disabled selected>Select a country</option>
+      </select><br>
+      <input type="text" placeholder='Passport Number' class='text' id='passport' pattern="^[A-PR-WYa-pr-wy][1-9]\d\s?\d{4}[1-9]$" required><br>
+      <br>
+      <div class="row">
+        <a href="#" type="submit" class="btn-signup" id='do-signup'>Sign up </a>
+        <a href="#" class="forgot">Forgot? </a>
+        <a href="#" class='btn-login' id='do-login'>Login</a>
+      </div>
+      <br>
+      <p id="error" style="color: #E53935 ; font-weight: bold;"> </p>
+    </form>
+  </div>
+</section>
+<footer>
+  <p></p>
+</footer>
+<!-- partial -->
+  <!--<script  src="./script.js"></script> -->
+  <script type="text/javascript">
+    function validatePassport(passport){
+      return true;
+      var reg = /^[A-PR-WYa-pr-wy][1-9]\d\s?\d{4}[1-9]$/;
+      if(reg.test(passport) == false){
+          document.getElementById("error").textContent = "Invalid passport number.";
+          setTimeout(hideError, 5000);
+          return false;
+      }
+      return true;
+    }
+
+    function validateEmail(email){
+      var reg = /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9-]+(?:\.[a-zA-Z0-9-]+)*$/;
+      if(reg.test(email) == false){
+          document.getElementById("error").textContent = "Invalid email format.";
+          setTimeout(hideError, 5000);
+          return false;
+      }
+      return true;
+    }
+
+    function hideError() {
+      document.getElementById('error').textContent = ' ';
+    }
+    // Function to handle form submission
+    function handleFormSubmission(event) {
+      event.preventDefault();
+
+      // Get the input values and perform validation
+      var username = document.getElementById('username').value;
+      var surname = document.getElementById('surname').value;
+      var email = document.getElementById('email').value;
+      var password = document.getElementById('password').value;
+      var password_ver = document.getElementById('password_ver').value;
+      var date = document.getElementById('dob').value;
+      var coo = document.getElementById('coo').value;
+      var passport = document.getElementById('passport').value;
+
+      var error = document.getElementById('error');
+      // Perform validation for required fields
+      var requiredFields = document.querySelectorAll('[required]');
+      var emptyFields = Array.from(requiredFields).filter(function(field) {
+        return !field.value;
+      });
+
+      if (emptyFields.length > 0) {
+        error.textContent = 'Please fill all required fields.';
+        setTimeout(hideError, 4000);
+        return;
+      }
+
+      if (validateEmail(email)==false) return;
+
+      if (password!=password_ver){
+        error.textContent = 'Password does not match.';
+        setTimeout(hideError, 5000);
+      }
+
+      if (validatePassport(passport)==false) return;
+
+      // Perform additional validations and logic
+
+      // Create the request body
+      var requestBody = {
+        username: username,
+        surname: surname,
+        email: email,
+        password: password,
+        dob: date,
+        coo: coo,
+        passport: passport
+      };
+
+      // Make the POST request
+      fetch('/signup', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(requestBody)
+      })
+      .then(function(response) {
+        // Parse the JSON response
+        return response.json();
+      })
+      .then(function(data) {
+        // Access the properties in the response
+        console.log(data.status); // "success"
+        console.log(data.message); // "Account created!"
+      })
+      .catch(function(error) {
+        // Handle any error
+        console.error('Error:', error);
+      });
+    }
+
+    // Function to handle login button click
+    function handleLoginButtonClick() {
+      var BASE_URL = window.location.origin;
+      window.location.href = BASE_URL + '/login';
+    }
+
+    // Function to populate the country dropdown
+    function populateCountryDropdown() {
+      var dropdown = document.getElementById('coo');
+
+      // Fetch country data from REST Countries API
+      fetch('https://restcountries.com/v3.1/all')
+        .then(function(response) {
+          return response.json();
+        })
+        .then(function(data) {
+          // Extract country names and ISO codes
+          var countries = data.map(function(country) {
+            return {
+              name: country.name.common,
+              code: country.cca3
+            };
+          });
+
+          // Sort countries alphabetically by name
+          countries.sort(function(a, b) {
+            if (a.name < b.name) return -1;
+            if (a.name > b.name) return 1;
+            return 0;
+          });
+
+          // Populate dropdown menu
+          countries.forEach(function(country) {
+            var option = document.createElement('option');
+            option.value = country.code;
+            option.text = country.name + ' (' + country.code + ')';
+            dropdown.add(option);
+          });
+        })
+        .catch(function(error) {
+          console.error('Error:', error);
+        });
+    }
+
+    // Add event listeners
+    document.getElementById('do-signup').addEventListener('click', handleFormSubmission);
+    document.getElementById('do-login').addEventListener('click', handleLoginButtonClick);
+
+    // Populate the country dropdown
+    populateCountryDropdown();
+  </script>
+
+
+</body>
+</html>
