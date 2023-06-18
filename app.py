@@ -48,11 +48,11 @@ app.config["MONGO_URI"] = 'mongodb://' + "localhost" + ':27017/'
 #db = mongo.db
 #accounts =  db['Accounts']
 
-client = MongoClient('mongodb://localhost:27017/DigitalAirlines')
+client = MongoClient('mongodb://localhost:27017/DigitalAirlines')["DigitalAirlines"]
 #db = client['DigitalAirlines']
-accounts = client["Accounts"]
-users = client["Users"]
-sessions = client["Sessions"]
+accounts = client["accounts"]
+users = client["users"]
+sessions = client["sessions"]
 
 
 @app.route('/login', methods=['GET', 'POST'])
@@ -96,7 +96,7 @@ def signup():
         try:
             data = request.get_json()
 
-            name = data['username']
+            name = data['name']
             surname = data['surname']
             email = data['email']
             password = data['password']
@@ -105,6 +105,7 @@ def signup():
             passport_number = data['passport']
 
             user_exists = accounts.find_one({"username": email})
+            print("\nUser exists:",user_exists)
 
             if user_exists:
                 return {"status": "failure", "message": "Email already exists!"}
@@ -124,19 +125,35 @@ def signup():
             users.insert_one(user_info)
 
             session_key = str(uuid4())
-            sessions.insert_one({"id": account["id"], "session-key": session_key})
+            sessions.insert_one({"id": id, "session-key": session_key})
 
 
-            return {"status": "sucess", "message": "Account created!"}
+            return {"status": "success", "message": "Account created!", "session-key": session_key}
         except Exception as e:
             print("eRROR:",e)
             return {"status": "failure", "message": "Invalid parameters!"}
         finally:
             print("done")
 
-@app.route('/singout', methods=['POST'])
+@app.route('/signout', methods=['POST'])
 def signout():
-    pass
+    data = request.get_json()
+
+    username = data["username"]
+    session_key = data["session-key"]
+
+    id = accounts.find_one({"username": username})
+    if not id:
+        return {"status": "failure", "message": "cant find account"}
+
+    pair = sessions.find_one({"id": id["id"], "session-key": session_key})
+    if not pair:
+        return {"status": "failure", "message": "cant find pair"}
+
+    sessions.delete_one({"id": id["id"], "session-key": session_key})
+
+    return {"status": "success", "message": "Session terminated!"}
+
 
 @app.route('/search/<parameters>', methods=['POST'])
 def search():
@@ -168,4 +185,4 @@ def serve_start():
     return(open("index.html","r"))
 
 if __name__ == '__main__':
-    app.run(debug=True, port=80)
+    app.run(debug=True, port=8080)
