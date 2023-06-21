@@ -16,6 +16,11 @@ steps to create mongodb
  docker start DigitalAirlines
  docker exec -it DigitalAirlines mongosh
 
+# TODO:
+
+Δημιουργία worker που θα βγάζει το session key μετά από 30 λεπτά αδράνειας και
+θα κάνει reset μετά από κάποια ενέργεια.
+
 """
 
 
@@ -45,6 +50,7 @@ accounts = client["accounts"]
 users = client["users"]
 sessions = client["sessions"]
 flights = client["flights"]
+#reservations = clients["reservations"]
 
 
 @app.route('/login', methods=['GET', 'POST'])
@@ -127,6 +133,18 @@ def signup():
         finally:
             print("done")
 
+def validateSessionKey(username, session_key):
+    id = accounts.find_one({"username": username})
+    print("validation returned:",id)
+    if not id:
+        return False # cant find account
+
+    pair = sessions.find_one({"id": id["id"], "session-key": session_key})
+    if not pair:
+        return {"status": "failure", "message": "Invalid parameters"} # cant find pair (id, session-key)
+
+    return {"id": id["id"], "session-key": session_key}
+
 @app.route('/signout', methods=['POST'])
 def signout():
     data = request.get_json()
@@ -136,14 +154,12 @@ def signout():
     except KeyError:
         return {"status": "failure", "message": "Invalid parameters"}
 
+    validated_session_key = validateSessionKey(username, session_key)
+    if not validated_session_key:
+        return {"status": "failure", "message": "Invalid parameters"}
+    else:
+        id = validated_session_key["id"]
 
-    id = accounts.find_one({"username": username})
-    if not id:
-        return {"status": "failure", "message": "Invalid parameters"} # cant find account
-
-    pair = sessions.find_one({"id": id["id"], "session-key": session_key})
-    if not pair:
-        return {"status": "failure", "message": "Invalid parameters"} # cant find pair (id, session-key)
 
     sessions.delete_one({"id": id["id"], "session-key": session_key})
 
@@ -156,6 +172,15 @@ def search():
     print(data)
 
     try:
+        username = data["username"]
+        session_key = data["session-key"]
+        validated_session_key = validateSessionKey(username, session_key)
+        if not validated_session_key:
+            return {"status": "failure", "message": "Invalid parameters"}
+        else:
+            user_id = validated_session_key["id"]
+
+
         airport_from = data["airport-origin"]
         airport_to = data["airport-destination"]
         date = data["date"]
@@ -204,25 +229,116 @@ def search():
     return records
 
 
-@app.route('/flight/<id>', methods=['GET'])
-def get_flight(id):
-    pass
+@app.route('/flight', methods=['GET'])
+def get_flight():
+    data = request.get_json()
 
-@app.route('/reservation', methods=['POST'])
-def create_reservation():
-    pass
+    try:
+        username = data["username"]
+        session_key = data["session-key"]
+        validated_session_key = validateSessionKey(username, session_key)
+        if not validated_session_key:
+            return {"status": "failure", "message": "Invalid parameters"}
+        else:
+            user_id = validated_session_key["id"]
+
+        flight_id = data["flight-id"]
+
+    except KeyError:
+        return {"status": "failure", "message": "Invalid parameters"}
+
+    record = flights.find({"_id":flight_id})
+    if not record:
+        return {"status": "failure", "message": "Flight doesn't exist!"}
+
+    return record
 
 @app.route('/reservations', methods=['POST'])
+def get_reservations():
+    data = request.get_json()
+    try:
+        username = data["username"]
+        session_key = data["session-key"]
+        validated_session_key = validateSessionKey(username, session_key)
+        if not validated_session_key:
+            return {"status": "failure", "message": "Invalid parameters"}
+        else:
+            user_id = validated_session_key["id"]
+
+    except KeyError:
+        return {"status": "failure", "message": "Invalid parameters"}
+
+    reservations = reservations.find({"user-id": user_id})
+
+    return reservations
+
+@app.route('/reservation', methods=['POST'])
 def get_reservation():
-    pass
+    data = request.get_json()
+    try:
+        username = data["username"]
+        session_key = data["session-key"]
+        validated_session_key = validateSessionKey(username, session_key)
+        if not validated_session_key:
+            return {"status": "failure", "message": "Invalid parameters"}
+        else:
+            user_id = validated_session_key["id"]
+
+        reservation_id = data["reservation-id"]
+
+    except KeyError:
+        return {"status": "failure", "message": "Invalid parameters"}
+
+    record = reservations.find({"_id": reservation_id})
+
+    return record
 
 @app.route('/cancel', methods=['POST'])
 def cancel_reservation():
-    pass
+    data = request.get_json()
+    try:
+        username = data["username"]
+        session_key = data["session-key"]
+        validated_session_key = validateSessionKey(username, session_key)
+        if not validated_session_key:
+            return {"status": "failure", "message": "Invalid parameters"}
+        else:
+            user_id = validated_session_key["id"]
 
-@app.route('/accountDel', methods=['GET'])
+        reservation_id = data["reservation-id"]
+
+    except KeyError:
+        return {"status": "failure", "message": "Invalid parameters"}
+
+    reservations.delete_one({"_id": reservation_id})
+
+    """
+    Also update available flights
+    """
+
+@app.route('/account-delete', methods=['POST'])
 def delete_account():
-    pass
+    data = request.get_json()
+    try:
+        username = data["username"]
+        session_key = data["session-key"]
+        validated_session_key = validateSessionKey(username, session_key)
+        if not validated_session_key:
+            return {"status": "failure", "message": "Invalid parameters"}
+        else:
+            user_id = validated_session_key["id"]
+
+    except KeyError:
+        return {"status": "failure", "message": "Invalid parameters"}
+
+    accounts.delete_one({"id": user_id})
+    users.delete_one({"id": user_id})
+
+    return {"status": "success", "message": "Account deleted!"}
+
+
+
+
 
 @app.route('/', methods=['GET'])
 def serve_start():
