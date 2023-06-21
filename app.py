@@ -35,6 +35,8 @@ GENERAL FUNCTIONS
 |--------------------------------------------------|
 | createLoginError      |           yes            |
 |--------------------------------------------------|
+| SingoutUser           |           yes            |
+|--------------------------------------------------|
 
 USER
 |--------------------------------------------------|
@@ -67,7 +69,7 @@ ADMIN
 |--------------------------------------------------|
 | sys_login             |           yes            |
 |--------------------------------------------------|
-| sys_signout           |                          |
+| sys_signout           |           yes            |
 |--------------------------------------------------|
 | create_flight         |                          |
 |--------------------------------------------------|
@@ -104,24 +106,25 @@ app.config["MONGO_URI"] = 'mongodb://' + "localhost" + ':27017/'
 
 client = MongoClient('mongodb://localhost:27017/DigitalAirlines')["DigitalAirlines"]
 
+admins = client["admins"]
+admin_sessions = client["admin_sessions"]
 accounts = client["accounts"]
 users = client["users"]
 sessions = client["sessions"]
 flights = client["flights"]
 reservations = client["reservations"]
-admins = client["admins"]
 
 permitted_endpoints_for_user = ("login", "signup", "signout", "search", "flight", "reservations", "reservation", "cancel", "account-delete")
 
-def validateSessionKey(username, session_key):
-    id = accounts.find_one({"username": username})
-    print("validation returned:",id)
-    if not id:
-        return False # cant find account
+def validateSessionKey(username, session_key, admin=False):
+    sessions_db = sessions if not admin else admin_sessions
+    accounts_db = accounts if not admin else admins
 
-    pair = sessions.find_one({"id": id["id"], "session-key": session_key})
-    if not pair:
-        return {"status": "failure", "message": "Invalid parameters"} # cant find pair (id, session-key)
+    id = accounts_db.find_one({"username": username})
+    if not id: return False # cant find account
+
+    pair = sessions_db.find_one({"id": id["id"], "session-key": session_key})
+    if not pair: return False # cant find pair (id, session-key)
 
     return {"id": id["id"], "session-key": session_key}
 
@@ -142,7 +145,7 @@ def LoginUser(username, password, admin=False):
     session_key = str(uuid4())
     info = {"id": account["id"], "session-key": session_key}
 
-    sessions.insert_one(info)
+    (sessions if not admin else admin_sessions).insert_one(info)
 
     return createLoginError(info)
 
@@ -157,6 +160,16 @@ def createLoginError(authenticated_info):
     else:
         session_key = authenticated_info["id"]
         return {"status": "success", "message": "Logged in!", "session-key": session_key}
+
+def SingoutUser(username, session_key, admin=False):
+    validated_session_key = validateSessionKey(username, session_key, admin=admin)
+    if not validated_session_key:
+        return {"status": "failure", "message": "Invalid parameters"}
+    else:
+        id = validated_session_key["id"]
+        sessions.delete_one({"id": id["id"], "session-key": session_key})
+
+    return {"status": "success", "message": "Session terminated!"}
 """
 User functions
 """
@@ -196,7 +209,6 @@ def signup():
             passport_number = data['passport']
 
             user_exists = accounts.find_one({"username": email})
-            print("\nUser exists:",user_exists)
 
             if user_exists:
                 return {"status": "failure", "message": "Email already exists!"}
@@ -221,10 +233,7 @@ def signup():
 
             return {"status": "success", "message": "Account created!", "session-key": session_key}
         except Exception as e:
-            print("eRROR:",e)
             return {"status": "failure", "message": "Invalid parameters!"}
-        finally:
-            print("done")
 
 @app.route('/signout', methods=['POST'])
 def signout():
@@ -242,14 +251,13 @@ def signout():
         id = validated_session_key["id"]
 
 
-    sessions.delete_one({"id": id["id"], "session-key": session_key})
+    sessions.delete_one({"id": id, "session-key": session_key})
 
     return {"status": "success", "message": "Session terminated!"}
 
 @app.route('/search', methods=['POST'])
 def search():
     data = request.get_json()
-    print(data)
 
     try:
         username = data["username"]
@@ -445,7 +453,22 @@ def sys_login():
 
 @app.route('/sys-signout', methods=['POST'])
 def sys_signout():
-    pass
+    data = request.get_json()
+    try:
+        username = data["username"]
+        session_key = data["session-key"]
+    except KeyError:
+        return {"status": "failure", "message": "Invalid parameters"}
+
+    validated_session_key = validateSessionKey(username, session_key, admin=True)
+    if not validated_session_key:
+        return {"status": "failure", "message": "Invalid parameters"}
+    else:
+        id = validated_session_key["id"]
+
+    admin_sessions.delete_one({"id": id, "session-key": session_key})
+
+    return {"status": "success", "message": "Session terminated!"}
 
 @app.route('/create-flight', methods=['POST'])
 def create_flight():
