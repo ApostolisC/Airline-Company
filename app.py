@@ -18,10 +18,70 @@ steps to create mongodb
 
 # TODO:
 
+
 Δημιουργία worker που θα βγάζει το session key μετά από 30 λεπτά αδράνειας και
 θα κάνει reset μετά από κάποια ενέργεια.
 
+
+TESTED:
+
+GENERAL FUNCTIONS
+|--------------------------------------------------|
+|       Function        |         Tested           |
+|--------------------------------------------------|
+| validateSessionKey    |           yes            |
+|--------------------------------------------------|
+| LoginUser             |           yes            |
+|--------------------------------------------------|
+| createLoginError      |           yes            |
+|--------------------------------------------------|
+
+USER
+|--------------------------------------------------|
+|       Function        |         Tested           |
+|--------------------------------------------------|
+| login                 |           yes            |
+|--------------------------------------------------|
+| signup                |           yes            |
+|--------------------------------------------------|
+| signout               |           yes            |
+|--------------------------------------------------|
+| search                |                          |
+|--------------------------------------------------|
+| get_flight            |                          |
+|--------------------------------------------------|
+| flight_reservation    |           no             |
+|--------------------------------------------------|
+| get_reservations      |                          |
+|--------------------------------------------------|
+| get_reservation_info  |           no             |
+|--------------------------------------------------|
+| cancel_reservation    |                          |
+|--------------------------------------------------|
+| delete_account        |           yes            |
+|--------------------------------------------------|
+
+ADMIN
+|--------------------------------------------------|
+|       Function        |         Tested           |
+|--------------------------------------------------|
+| sys_login             |           yes            |
+|--------------------------------------------------|
+| sys_signout           |                          |
+|--------------------------------------------------|
+| create_flight         |                          |
+|--------------------------------------------------|
+| update_flight         |                          |
+|--------------------------------------------------|
+| delete_flight         |                          |
+|--------------------------------------------------|
+| search_flights        |                          |
+|--------------------------------------------------|
+| flight_info           |                          |
+|--------------------------------------------------|
+
 """
+
 
 
 def createHash(password):
@@ -40,19 +100,66 @@ def verifyHash(hash, password):
 
 app = Flask(__name__)
 app.config["MONGO_URI"] = 'mongodb://' + "localhost" + ':27017/'
-#mongo = PyMongo(app)
-#db = mongo.db
-#accounts =  db['Accounts']
+
 
 client = MongoClient('mongodb://localhost:27017/DigitalAirlines')["DigitalAirlines"]
-#db = client['DigitalAirlines']
+
 accounts = client["accounts"]
 users = client["users"]
 sessions = client["sessions"]
 flights = client["flights"]
-#reservations = clients["reservations"]
+reservations = client["reservations"]
+admins = client["admins"]
 
+permitted_endpoints_for_user = ("login", "signup", "signout", "search", "flight", "reservations", "reservation", "cancel", "account-delete")
 
+def validateSessionKey(username, session_key):
+    id = accounts.find_one({"username": username})
+    print("validation returned:",id)
+    if not id:
+        return False # cant find account
+
+    pair = sessions.find_one({"id": id["id"], "session-key": session_key})
+    if not pair:
+        return {"status": "failure", "message": "Invalid parameters"} # cant find pair (id, session-key)
+
+    return {"id": id["id"], "session-key": session_key}
+
+def LoginUser(username, password, admin=False):
+    """
+    To reuse on both login and sys-login
+    """
+    database = accounts if not admin else admins
+
+    account = database.find_one({"username": username})
+
+    if not account: return createLoginError(None)
+
+    hash = account["password"]
+    verified = verifyHash(hash, password)
+    if not verified: return createLoginError(False)
+
+    session_key = str(uuid4())
+    info = {"id": account["id"], "session-key": session_key}
+
+    sessions.insert_one(info)
+
+    return createLoginError(info)
+
+def createLoginError(authenticated_info):
+    """
+    To reuse on both login and sys-login
+    """
+    if authenticated_info==None:
+        return {"status": "failure", "message": "Account doesn't exist!"}
+    elif authenticated_info==False:
+        return {"status": "failure", "message": "Invalid Credentials!"}
+    else:
+        session_key = authenticated_info["id"]
+        return {"status": "success", "message": "Logged in!", "session-key": session_key}
+"""
+User functions
+"""
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'GET':
@@ -64,27 +171,13 @@ def login():
             username = data['username']
             password = data['password']
 
-            account = accounts.find_one({"username": username})
+            authenticated_action = LoginUser(username, password)
 
-            if not account:
-                return {"status": "failure", "message": "User doesn't exist!"}
+            return authenticated_action
 
-            hash = account["password"]
-            verified = verifyHash(hash, password)
-
-            if not verified:
-                return {"status": "failure", "message": "Invalid Credentials!"}
-
-            session_key = str(uuid4())
-
-            sessions.insert_one({"id": account["id"], "session-key": session_key})
-
-
-            return {"status": "success", "message": "Logged in!", "session-key": session_key}
         except Exception as e:
             print(e)
             return {"status": "failure", "message": "Invalid parameters!"}
-
 
 @app.route('/signup', methods=['GET', 'POST'])
 def signup():
@@ -133,18 +226,6 @@ def signup():
         finally:
             print("done")
 
-def validateSessionKey(username, session_key):
-    id = accounts.find_one({"username": username})
-    print("validation returned:",id)
-    if not id:
-        return False # cant find account
-
-    pair = sessions.find_one({"id": id["id"], "session-key": session_key})
-    if not pair:
-        return {"status": "failure", "message": "Invalid parameters"} # cant find pair (id, session-key)
-
-    return {"id": id["id"], "session-key": session_key}
-
 @app.route('/signout', methods=['POST'])
 def signout():
     data = request.get_json()
@@ -164,7 +245,6 @@ def signout():
     sessions.delete_one({"id": id["id"], "session-key": session_key})
 
     return {"status": "success", "message": "Session terminated!"}
-
 
 @app.route('/search', methods=['POST'])
 def search():
@@ -228,8 +308,7 @@ def search():
 
     return records
 
-
-@app.route('/flight', methods=['GET'])
+@app.route('/flight', methods=['POST'])
 def get_flight():
     data = request.get_json()
 
@@ -253,6 +332,10 @@ def get_flight():
 
     return record
 
+@app.route('/flight-reservation', methods=['POST'])
+def flight_reservation():
+    pass
+
 @app.route('/reservations', methods=['POST'])
 def get_reservations():
     data = request.get_json()
@@ -271,6 +354,10 @@ def get_reservations():
     reservations = reservations.find({"user-id": user_id})
 
     return reservations
+
+@app.route('/reservation-info', methods=['POST'])
+def get_reservation_info():
+    pass
 
 @app.route('/reservation', methods=['POST'])
 def get_reservation():
@@ -337,6 +424,48 @@ def delete_account():
     return {"status": "success", "message": "Account deleted!"}
 
 
+"""
+Admin functions
+"""
+@app.route('/sys-login', methods=['POST'])
+def sys_login():
+    try:
+        data = request.get_json()
+
+        username = data['username']
+        password = data['password']
+
+        authenticated_action = LoginUser(username, password, admin=True)
+
+        return authenticated_action
+
+    except Exception as e:
+        print(e)
+        return {"status": "failure", "message": "Invalid parameters!"}
+
+@app.route('/sys-signout', methods=['POST'])
+def sys_signout():
+    pass
+
+@app.route('/create-flight', methods=['POST'])
+def create_flight():
+    pass
+
+@app.route('/update-flight', methods=['POST'])
+def update_flight():
+    pass
+
+@app.route('/delete-flight', methods=['POST'])
+def delete_flight():
+    pass
+
+@app.route('/search-flights', methods=['POST'])
+def search_flights():
+    pass
+
+@app.route('/flight-info', methods=['POST'])
+def flight_info():
+    pass
 
 
 
