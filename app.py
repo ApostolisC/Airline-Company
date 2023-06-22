@@ -1,4 +1,4 @@
-from flask import Flask, redirect, url_for, request
+from flask import Flask, redirect, url_for, request, abort, jsonify
 from flask_pymongo import PyMongo
 from pymongo import MongoClient
 
@@ -9,6 +9,7 @@ from argon2.exceptions import VerifyMismatchError
 
 from uuid import uuid4
 
+import uuid
 """
 steps to create mongodb
  docker pull mongo
@@ -48,9 +49,9 @@ USER
 |--------------------------------------------------|
 | signout               |           yes            |
 |--------------------------------------------------|
-| search                |                          |
+| search                |           yes            |
 |--------------------------------------------------|
-| get_flight            |                          |
+| get_flight            |           yes            |
 |--------------------------------------------------|
 | flight_reservation    |           no             |
 |--------------------------------------------------|
@@ -71,15 +72,15 @@ ADMIN
 |--------------------------------------------------|
 | sys_signout           |           yes            |
 |--------------------------------------------------|
-| create_flight         |                          |
+| create_flight         |           yes            |
 |--------------------------------------------------|
-| update_flight         |                          |
+| update_flight_cost    |           yes            |
 |--------------------------------------------------|
-| delete_flight         |                          |
+| delete_flight         |           yes            |
 |--------------------------------------------------|
-| search_flights        |                          |
+| search_flights        |           yes            |
 |--------------------------------------------------|
-| flight_info           |                          |
+| flight_info           |           yes            |
 |--------------------------------------------------|
 
 """
@@ -103,7 +104,6 @@ def verifyHash(hash, password):
 app = Flask(__name__)
 app.config["MONGO_URI"] = 'mongodb://' + "localhost" + ':27017/'
 
-
 client = MongoClient('mongodb://localhost:27017/DigitalAirlines')["DigitalAirlines"]
 
 admins = client["admins"]
@@ -115,6 +115,8 @@ flights = client["flights"]
 reservations = client["reservations"]
 
 permitted_endpoints_for_user = ("login", "signup", "signout", "search", "flight", "reservations", "reservation", "cancel", "account-delete")
+
+
 
 def validateSessionKey(username, session_key, admin=False):
     sessions_db = sessions if not admin else admin_sessions
@@ -158,13 +160,13 @@ def createLoginError(authenticated_info):
     elif authenticated_info==False:
         return {"status": "failure", "message": "Invalid Credentials!"}
     else:
-        session_key = authenticated_info["id"]
+        session_key = authenticated_info["session-key"]
         return {"status": "success", "message": "Logged in!", "session-key": session_key}
 
 def SingoutUser(username, session_key, admin=False):
     validated_session_key = validateSessionKey(username, session_key, admin=admin)
     if not validated_session_key:
-        return {"status": "failure", "message": "Invalid parameters"}
+        abort(403)
     else:
         id = validated_session_key["id"]
         sessions.delete_one({"id": id["id"], "session-key": session_key})
@@ -205,7 +207,7 @@ def signup():
             email = data['email']
             password = data['password']
             birth_date = data['dob']
-            country_of_origin = data['coo']
+            country_of_departure = data['coo']
             passport_number = data['passport']
 
             user_exists = accounts.find_one({"username": email})
@@ -222,7 +224,7 @@ def signup():
 
             login_info = {'id': id, "username": email, "password": hash}
 
-            user_info = {'id': id, 'name': name, 'surname': surname, 'email': email, 'birth_date': birth_date, 'country_of_origin': country_of_origin, 'passport': passport_number}
+            user_info = {'id': id, 'name': name, 'surname': surname, 'email': email, 'birth_date': birth_date, 'country_of_departure': country_of_departure, 'passport': passport_number}
 
             accounts.insert_one(login_info)
             users.insert_one(user_info)
@@ -246,7 +248,7 @@ def signout():
 
     validated_session_key = validateSessionKey(username, session_key)
     if not validated_session_key:
-        return {"status": "failure", "message": "Invalid parameters"}
+        abort(403)
     else:
         id = validated_session_key["id"]
 
@@ -262,16 +264,17 @@ def search():
     try:
         username = data["username"]
         session_key = data["session-key"]
-        validated_session_key = validateSessionKey(username, session_key)
+
+        keys = str(data.keys())
+
+        admin = True if "admin-search" in keys else False
+        validated_session_key = validateSessionKey(username, session_key, admin=admin)
         if not validated_session_key:
-            return {"status": "failure", "message": "Invalid parameters"}
+            abort(403)
         else:
             user_id = validated_session_key["id"]
 
 
-        airport_from = data["airport-origin"]
-        airport_to = data["airport-destination"]
-        date = data["date"]
     except KeyError:
         return {"status": "failure", "message": "Invalid parameters"}
 
@@ -280,14 +283,14 @@ def search():
     """
 
     a=0
-    if airport_from: a+=1
-    if airport_to: a+=2
-    if date: a+=4
+    if "departure-airport" in keys: a+=1
+    if "destination-airport" in keys: a+=2
+    if "date" in keys: a+=4
 
     """
     Our data are valid only when:
         1. We have all 3 parameters
-        2. Only the airports origin-destination
+        2. Only the airports departure-destination
         3. Only date
         4. All 3 are blank
 
@@ -298,23 +301,28 @@ def search():
         4. 0
     Every other value of a means invalid data
     """
+    print(a)
     if a not in (0,3,4,7):
         return {"status": "failure", "message": "Invalid parameters"}
 
     search = {}
-    # if a == 0 then search filter is ready
 
-    if a in (1,2):
-        search["airport-origin"] = airport_from
-        search["airport-destination"] = airport_to
+    if a in (3, 7):
+        search["departure-airport"] = data["departure-airport"]
+        search["destination-airport"] = data["destination-airport"]
 
-    if a in (1,3):
-        search["date"] = date
+    if a in (4, 7):
+        search["date"] = data["date"]
 
-    records = flights.find(search)
-    records.pop("_id")
+    records = flights.find(search, {"_id": 0})
+    result = []
 
-    return records
+    for f in records:
+        result.append(f)
+
+    print("\n\n\nrecords:",result)
+
+    return jsonify({"flights": result})
 
 @app.route('/flight', methods=['POST'])
 def get_flight():
@@ -325,20 +333,29 @@ def get_flight():
         session_key = data["session-key"]
         validated_session_key = validateSessionKey(username, session_key)
         if not validated_session_key:
-            return {"status": "failure", "message": "Invalid parameters"}
+            abort(403)
         else:
             user_id = validated_session_key["id"]
 
         flight_id = data["flight-id"]
 
+        record = list(flights.find({"flight-id": flight_id}, {"_id": 0}))
+        if record: record=record[0]
+
+
+        return record
+
     except KeyError:
         return {"status": "failure", "message": "Invalid parameters"}
 
-    record = flights.find({"_id":flight_id})
+
     if not record:
         return {"status": "failure", "message": "Flight doesn't exist!"}
 
     return record
+
+
+
 
 @app.route('/flight-reservation', methods=['POST'])
 def flight_reservation():
@@ -352,41 +369,20 @@ def get_reservations():
         session_key = data["session-key"]
         validated_session_key = validateSessionKey(username, session_key)
         if not validated_session_key:
-            return {"status": "failure", "message": "Invalid parameters"}
+            abort(403)
         else:
             user_id = validated_session_key["id"]
 
     except KeyError:
         return {"status": "failure", "message": "Invalid parameters"}
 
-    reservations = reservations.find({"user-id": user_id})
+    reservations = reservations.find({"user-id": user_id}, {"_id": 0})
 
     return reservations
 
 @app.route('/reservation-info', methods=['POST'])
 def get_reservation_info():
     pass
-
-@app.route('/reservation', methods=['POST'])
-def get_reservation():
-    data = request.get_json()
-    try:
-        username = data["username"]
-        session_key = data["session-key"]
-        validated_session_key = validateSessionKey(username, session_key)
-        if not validated_session_key:
-            return {"status": "failure", "message": "Invalid parameters"}
-        else:
-            user_id = validated_session_key["id"]
-
-        reservation_id = data["reservation-id"]
-
-    except KeyError:
-        return {"status": "failure", "message": "Invalid parameters"}
-
-    record = reservations.find({"_id": reservation_id})
-
-    return record
 
 @app.route('/cancel', methods=['POST'])
 def cancel_reservation():
@@ -396,7 +392,7 @@ def cancel_reservation():
         session_key = data["session-key"]
         validated_session_key = validateSessionKey(username, session_key)
         if not validated_session_key:
-            return {"status": "failure", "message": "Invalid parameters"}
+            abort(403)
         else:
             user_id = validated_session_key["id"]
 
@@ -411,6 +407,9 @@ def cancel_reservation():
     Also update available flights
     """
 
+
+
+
 @app.route('/account-delete', methods=['POST'])
 def delete_account():
     data = request.get_json()
@@ -419,7 +418,7 @@ def delete_account():
         session_key = data["session-key"]
         validated_session_key = validateSessionKey(username, session_key)
         if not validated_session_key:
-            return {"status": "failure", "message": "Invalid parameters"}
+            abort(403)
         else:
             user_id = validated_session_key["id"]
 
@@ -462,7 +461,7 @@ def sys_signout():
 
     validated_session_key = validateSessionKey(username, session_key, admin=True)
     if not validated_session_key:
-        return {"status": "failure", "message": "Invalid parameters"}
+        abort(403)
     else:
         id = validated_session_key["id"]
 
@@ -472,23 +471,167 @@ def sys_signout():
 
 @app.route('/create-flight', methods=['POST'])
 def create_flight():
-    pass
+    """
+    Flight Information required:
+    -> Departure airport
+    -> destination airport
+    -> date
+    -> # available tickets business
+    -> # available tickets economy
+    -> cost business
+    -> cost economy
+    """
+    data = request.get_json()
+    try:
+        username = data["username"]
+        session_key = data["session-key"]
+        validated_session_key = validateSessionKey(username, session_key, admin=True)
+        if not validated_session_key:
+            abort(403)
 
-@app.route('/update-flight', methods=['POST'])
-def update_flight():
-    pass
+
+        departure_airport = data["departure-airport"]
+        destination_airport = data["destination-airport"]
+        date = data["date"]
+        number_of_tickets_business = data["total-tickets-business"]
+        number_of_tickets_economy = data["total-tickets-economy"]
+        cost_business = data["business-cost"]
+        cost_economy = data["economy-cost"]
+    except KeyError:
+        return {"status": "failure", "message": "Invalid parameters"}
+
+    flights.insert_one({"flight-id": str(uuid.uuid1())[0:18],
+                        "departure-airport": departure_airport,
+                        "destination-airport": destination_airport,
+                        "date": date,
+                        "total-tickets-business": number_of_tickets_business,
+                        "total-tickets-economy": number_of_tickets_economy,
+                        "business-cost": cost_business,
+                        "economy-cost": cost_economy,
+                        "available-tickets-business": number_of_tickets_business,
+                        "available-tickets-economy": number_of_tickets_economy
+                        })
+
+    return {"status": "success", "message": "Flight created!"}
+
+@app.route('/update-flight-cost', methods=['POST'])
+def update_flight_cost():
+    data = request.get_json()
+    try:
+        username = data["username"]
+        session_key = data["session-key"]
+        validated_session_key = validateSessionKey(username, session_key, admin=True)
+        if not validated_session_key:
+            abort(403)
+
+        costs = data["new-costs"]
+
+        keys = list(costs.keys())
+
+        a=0
+        for v in keys:
+            if not v in ("business-cost", "economy-cost"): a+=1
+
+        if a or not keys:
+            return {"status": "failure", "message": "Invalid parameters"}
+
+        flight_id = data["flight-id"]
+
+        query = {"flight-id": flight_id}
+        new_values = {"$set": {}}
+
+
+        for v in keys:
+            new_values["$set"][v] = str(costs[v])
+
+        a=flights.update_one(query, new_values)
+
+        return {"status": "success", "message": "Updated flight costs"}
+
+    except KeyError:
+        return {"status": "failure", "message": "Invalid parameters"}
 
 @app.route('/delete-flight', methods=['POST'])
 def delete_flight():
-    pass
+    data = request.get_json()
+    try:
+        username = data["username"]
+        session_key = data["session-key"]
+        validated_session_key = validateSessionKey(username, session_key, admin=True)
+        if not validated_session_key:
+            abort(403)
+
+        flight_id = data["flight-id"]
+
+        flight = flights.find_one({"flight-id": flight_id})
+        if not flight:
+            return {"status": "failure", "message": "Flight doesn't exist"}
+
+        reservations_exist = reservations.find_one({"flight-id": flight_id})
+
+        if not reservations_exist:
+            flights.delete_one({"flight-id": flight_id})
+            return {"status": "success", "message": "Deleted flight!"}
+        else:
+            return {"status": "failure", "message": "Flight has active reservations!"}
+
+
+    except KeyError:
+        return {"status": "failure", "message": "Invalid parameters"}
 
 @app.route('/search-flights', methods=['POST'])
 def search_flights():
-    pass
+    data = request.get_json()
+    try:
+        username = data["username"]
+        session_key = data["session-key"]
+        validated_session_key = validateSessionKey(username, session_key, admin=True)
+        if not validated_session_key:
+            abort(403)
+
+        flight_id = data["flight-id"]
+
+        reservations_exist = reservations.find_one({"flight-id": flight_id})
+
+        if not reservations_exist:
+            flight.delete_one({"flight-id": flight_id})
+            return {"status": "success", "message": "Updates flight costs"}
+        else:
+            return {"status": "failure", "message": "Flight has active reservations!"}
+
+
+    except KeyError:
+        return {"status": "failure", "message": "Invalid parameters"}
 
 @app.route('/flight-info', methods=['POST'])
 def flight_info():
-    pass
+    data = request.get_json()
+    try:
+        username = data["username"]
+        session_key = data["session-key"]
+        validated_session_key = validateSessionKey(username, session_key, admin=True)
+        if not validated_session_key:
+            abort(403)
+
+        flight_id = data["flight-id"]
+
+        flight = flights.find_one({"flight-id": flight_id}, {"_id": 0})
+
+        if not flight:
+            return {"status": "failure", "message": "Flight doesn't exist!"}
+
+        flight["total-tickets"] = flight["total-tickets-business"] + flight["total-tickets-economy"]
+        flight["total-available-tickets"] = flight["available-tickets-business"] + flight["available-tickets-economy"]
+
+        flight["reservations"] = []
+
+        #flight.pop("date") # to remove the date because date isnt in the assignments description
+
+        return flight
+
+
+    except KeyError:
+        return {"status": "failure", "message": "Invalid parameters"}
 
 
 
