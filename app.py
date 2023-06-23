@@ -52,13 +52,13 @@ USER
 |--------------------------------------------------|
 | get_flight            |           yes            |
 |--------------------------------------------------|
-| flight_reservation    |           no             |
+| flight_reservation    |           yes            |
 |--------------------------------------------------|
-| get_reservations      |                          |
+| get_reservations      |           yes            |
 |--------------------------------------------------|
-| get_reservation_info  |           no             |
+| get_reservation_info  |           yes            |
 |--------------------------------------------------|
-| cancel_reservation    |                          |
+| cancel_reservation    |           yes            |
 |--------------------------------------------------|
 | delete_account        |           yes            |
 |--------------------------------------------------|
@@ -303,7 +303,7 @@ def search():
         4. 0
     Every other value of a means invalid data
     """
-    print(a)
+
     if a not in (0,3,4,7):
         return {"status": "failure", "message": "Invalid parameters"}
 
@@ -322,7 +322,7 @@ def search():
     for f in records:
         result.append(f)
 
-    print("\n\n\nrecords:",result)
+
 
     return jsonify({"flights": result})
 
@@ -345,8 +345,6 @@ def get_flight():
         if record: record=record[0]
 
 
-        return record
-
     except KeyError:
         return {"status": "failure", "message": "Invalid parameters"}
 
@@ -361,11 +359,48 @@ def get_flight():
 
 @app.route('/flight-reservation', methods=['POST'])
 def flight_reservation():
-    pass
+    data = request.get_json()
+
+    try:
+        username = data["username"]
+        session_key = data["session-key"]
+        validated_session_key = validateSessionKey(username, session_key)
+        if not validated_session_key:
+            abort(403)
+        else:
+            user_id = validated_session_key["id"]
+
+        flight_id = data["flight-id"]
+        flight = flights.find_one({"flight-id": flight_id})
+        if not flight:
+            return {"status": "failure", "message": "Flight doesn't exist"}
+
+        reservation_id = str(uuid.uuid4())[:8]
+        name = data["name"]
+        surname = data["surname"]
+        passport_number = data["passport-number"]
+        dob = data["dob"]
+        email = data["email"]
+        reservation_class = data["reservation-class"]
+
+        if reservation_class not in ("business", "economy"):
+            return {"status": "failure", "message": "Invalid class!"}
+
+        record = { "user-id": user_id,"reservation-id": reservation_id, "flight-id": flight_id ,"name": name, "surname": surname, "passport-number": passport_number,
+                  "dob": dob, "email": email, "class": reservation_class}
+
+        reservations.insert_one(record)
+
+        return {"status": "success", "message": "Reservation completed!"}
+
+    except KeyError:
+        return {"status": "failure", "message": "Invalid parameters"}
+
 
 @app.route('/reservations', methods=['POST'])
 def get_reservations():
     data = request.get_json()
+
     try:
         username = data["username"]
         session_key = data["session-key"]
@@ -378,13 +413,62 @@ def get_reservations():
     except KeyError:
         return {"status": "failure", "message": "Invalid parameters"}
 
-    reservations = reservations.find({"user-id": user_id}, {"_id": 0})
+    result = reservations.find({"user-id": user_id}, {"_id": 0, "user-id": 0})
 
-    return reservations
+
+    """
+    Seeing the code below you may think why dont we return the list(result) as it is
+    instead of creating a new list and copy the data.
+    The reason is that with return list(result) the client gets an empty list
+    even when the data are not empty...
+    """
+    records = []
+
+    for record in list(result):
+        records.append(record)
+
+
+    return list(records)
 
 @app.route('/reservation-info', methods=['POST'])
 def get_reservation_info():
-    pass
+    data = request.get_json()
+
+    try:
+        username = data["username"]
+        session_key = data["session-key"]
+        validated_session_key = validateSessionKey(username, session_key)
+        if not validated_session_key:
+            abort(403)
+        else:
+            user_id = validated_session_key["id"]
+
+        reservation_id = data["reservation-id"]
+
+        reservation = reservations.find_one({"reservation-id": reservation_id})
+        if not reservation:
+                return {"status": "failure", "message": "Reservation doesn't exist"}
+
+        flight_id = reservation["flight-id"]
+
+        flight = flights.find_one({"flight-id": flight_id})
+
+        result = {"departure-airport": flight["departure-airport"],
+                    "destination-airport": flight["destination-airport"],
+                    "flight-date": flight["date"],
+                    "name": reservation["name"],
+                    "surname": reservation["surname"],
+                    "passport-number": reservation["passport-number"],
+                    "dob": reservation["dob"],
+                    "email": reservation["email"],
+                    "reservation-class": reservation["class"]
+                    }
+        return result
+
+
+    except KeyError:
+        return {"status": "failure", "message": "Invalid parameters"}
+
 
 @app.route('/cancel', methods=['POST'])
 def cancel_reservation():
@@ -403,11 +487,24 @@ def cancel_reservation():
     except KeyError:
         return {"status": "failure", "message": "Invalid parameters"}
 
-    reservations.delete_one({"_id": reservation_id})
+    reservation = list(reservations.find({"reservation-id": reservation_id}))
+    if not reservation:
+        return {"status": "failure", "message": "Reservation doesn't exist!"}
+    reservation = reservation[0]
 
-    """
-    Also update available flights
-    """
+    class_ = reservation["class"]
+
+    flight = list(flights.find({"flight-id": reservation["flight-id"]}))[0]
+
+    new_value = str(int(flight["available-tickets-%s"%class_])+1)
+
+    flight_id = reservation["flight-id"]
+
+    flights.update_one({"flight-id": reservation["flight-id"]}, {"$set": {"available-tickets-%s"%class_: new_value}})
+
+    reservations.delete_one({"reservation-id": reservation_id})
+
+    return {"status": "success", "message": "Reservation canceled!"}
 
 
 
@@ -643,4 +740,4 @@ def serve_start():
     return(open("index.html","r"))
 
 if __name__ == '__main__':
-    app.run(debug=True, host="0.0.0.0", port=8080)
+    app.run(debug=True, host="0.0.0.0", port=5000)
