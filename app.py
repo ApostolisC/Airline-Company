@@ -1,5 +1,4 @@
 from flask import Flask, redirect, url_for, request, abort, jsonify
-from flask_pymongo import PyMongo
 from pymongo import MongoClient
 
 import os
@@ -102,9 +101,11 @@ def verifyHash(hash, password):
 
 
 app = Flask(__name__)
-app.config["MONGO_URI"] = 'mongodb://' + "localhost" + ':27017/'
+app.config["MONGO_URI"] = 'mongodb://' + "172.17.0.3" + ':27017/'
 
-client = MongoClient('mongodb://localhost:27017/DigitalAirlines')["DigitalAirlines"]
+mongodb_hostname = os.environ.get("MONGO_HOSTNAME","localhost")
+
+client = MongoClient('mongodb://172.17.0.3:27017/DigitalAirlines')["DigitalAirlines"]
 
 admins = client["admins"]
 admin_sessions = client["admin_sessions"]
@@ -185,6 +186,7 @@ def login():
 
             username = data['username']
             password = data['password']
+
 
             authenticated_action = LoginUser(username, password)
 
@@ -641,4 +643,4 @@ def serve_start():
     return(open("index.html","r"))
 
 if __name__ == '__main__':
-    app.run(debug=True, port=8080)
+    app.run(debug=True, host="0.0.0.0", port=8080)
