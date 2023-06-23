@@ -101,11 +101,11 @@ def verifyHash(hash, password):
 
 
 app = Flask(__name__)
-app.config["MONGO_URI"] = 'mongodb://' + "172.17.0.3" + ':27017/'
+app.config["MONGO_URI"] = 'mongodb://' + "mongodb" + ':27017/'
 
-mongodb_hostname = os.environ.get("MONGO_HOSTNAME","localhost")
+mongodb_hostname = os.environ.get("MONGO_HOSTNAME","mongodb")
 
-client = MongoClient('mongodb://172.17.0.3:27017/DigitalAirlines')["DigitalAirlines"]
+client = MongoClient('mongodb://' + mongodb_hostname + ':27017/DigitalAirlines')["DigitalAirlines"]
 
 admins = client["admins"]
 admin_sessions = client["admin_sessions"]
