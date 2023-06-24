@@ -19,9 +19,6 @@ steps to create mongodb
 # TODO:
 
 
-Δημιουργία worker που θα βγάζει το session key μετά από 30 λεπτά αδράνειας και
-θα κάνει reset μετά από κάποια ενέργεια.
-
 
 TESTED:
 
