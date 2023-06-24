@@ -112,8 +112,6 @@ sessions = client["sessions"]
 flights = client["flights"]
 reservations = client["reservations"]
 
-permitted_endpoints_for_user = ("login", "signup", "signout", "search", "flight", "reservations", "reservation", "cancel", "account-delete")
-
 
 
 def validateSessionKey(username, session_key, admin=False):
