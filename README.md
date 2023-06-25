@@ -97,24 +97,169 @@ Response:
 <h4>Signout</h4>
 An admin can signout by visiting /sys-signout endpoint, providing the following information:
 <pre>
-  {
-    "username": "admin_username",
-    "session-key": "session-key"
-  }
+{
+  "username": "admin_username",
+  "session-key": "session-key"
+}
 </pre>
 The result will be the removal of the provided session-key from admin_sessions collection, with the admin not being able to perform actions without logging in again.
 
 <h4>Create Flight</h4>
 Admin can create a flight using /create-flight endpoint providing the following information:
 <pre>
-  {
-    "departure-airport": "Athens",
-    "destination-airport": "Stockholm",
-    "date": "27/12/2023"
-    "total-tickets-business": 51
-    "total-tickets-economy": 138
-    "business-cost": "646",
-    "economy-cost": "206"
-  }
+{
+  "departure-airport": "Athens",
+  "destination-airport": "Stockholm",
+  "date": "27/12/2023"
+  "total-tickets-business": 51
+  "total-tickets-economy": 138
+  "business-cost": "646",
+  "economy-cost": "206"
+}
+</pre>
+
+Response:
+<pre>
+{
+  "status": "success", 
+  "message": "Flight created!"
+}
+</pre>
+
+<h4>Update flight cost</h4>
+Using endpoint /update-flight-cost the admin is able to update the cost for economy and business tickets.
+The message format must be as follows:
+<pre>
+{
+  "new-costs": {
+                  "business-cost": "new_cost",
+                  "economy-cost": "new_cost"
+                }
+}
+</pre>
+
+Response:
+<pre>
+{
+  "status": "success", 
+  "message": "Updated flight costs"
+}
+</pre>
+
+
+<h4>Delete flight</h4>
+By visiting /delete-flight endpoint the admin will be able to delete a flight from the database.
+He only needs to provide the flight id.
+
+Request message:
+<pre>
+{
+  "username": "admin_username",
+  "session-key": "session-key",
+  "flight-id": "flight_id"
+}
+</pre>
+
+If there are reservations for this flight, then the deletion will fail, with the admin getting the following response:
+<pre>
+{
+  "status": "failure", 
+  "message": "Flight has active reservations!"
+}
+</pre>
+
+And in case the flight doesn't exist:
+<pre>
+{
+  "status": "failure", 
+  "message": "Flight doesn't exist"
+}
+</pre>
+
+At last the normal response would be as follows:
+<pre>
+{
+  "status": "success", 
+  "message": "Deleted flight!"
+}
+</pre>
+
+<h4>Search flights</h4>
+The search function is the same for both admins and normal users.
+The only difference is that the admin must provide a keyword "admin-search": True so the server will know and try to validate his session key from admin_sessions and not sessions.
+The endpoint is /search.
+
+Then he may provide 3 more fields:
+* Departure airport
+* Destination airport
+* Date
+
+The search will be possible only if:
+1. Both departure and destination airports are provided
+2. Only date id provided
+3. All fields are provided
+4. None of the fields is provided
+
+The format for the above states are as follows:
+
+1. Both departure and destination airports are provided
+<pre>
+{
+  "departure-airport": "Athens",
+  "destination-airport": "Stockholm"
+}
+</pre>
+
+2. Only date is provided
+<pre>
+{
+  "date": "27/12/2023"
+}
+</pre>
+
+3. All fields are provided
+<pre>
+{
+  "departure-airport": "Athens",
+  "destination-airport": "Stockholm",
+  "date": "27/12/2023"
+}
+</pre>
+
+4. None of the fields is provided (Return all available flights)
+<pre>
+{
+  
+}
+</pre>
+
+<h4>Search flight information</h4>
+By visiting /flight-info and providing the flight-id admin is able to retrieve flight information.
+
+Request format:
+<pre>
+{
+  "username": "admin_username",
+  "session-key": "session-key",
+  "flight-id": "flight_id"
+}
+</pre>
+
+Response:
+<pre>
+{
+  "flight-id": "flight_id",
+  "departure-airport": "Athens",
+  "destination-airport": "Stockholm",
+  "date": "27/12/2023",
+  "total-tickets-business": "51",
+  "total-tickets-economy": "138",
+  "business-cost": "646",
+  "economy-cost": "206",
+  "available-tickets-business": "51",
+  "available-tickets-economy": "138",
+  "total-tickets": "189",
+  "total-available-tickets": "189"
+}
 </pre>
 
