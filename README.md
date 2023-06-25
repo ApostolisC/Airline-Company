@@ -541,9 +541,22 @@ We have the following path format:
     * data
 * docker-compose.yml
 
-First of all we need to download the official mongodb image.
-<br>Step 1.
+Step 1.
+<br>First of all we need to download the official mongodb image.
 <pre>
 docker pull mongo
 </pre>
 
+<br>Step2
+<br>Now inside the base path where the docker-compose.yml file exists we will run the following command to create the image:
+<pre>
+docker-compose build
+</pre>
+
+<br>Step3
+<br>Now we will run the container that contains both mongodb and flask server
+<pre>
+docker-compose up -d
+</pre>
+
+<br><b>At this point we can access the flask server from localhost:5000</b>
