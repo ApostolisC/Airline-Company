@@ -673,29 +673,6 @@ def delete_flight():
     except KeyError:
         return {"status": "failure", "message": "Invalid parameters"}
 
-@app.route('/search-flights', methods=['POST'])
-def search_flights():
-    data = request.get_json()
-    try:
-        username = data["username"]
-        session_key = data["session-key"]
-        validated_session_key = validateSessionKey(username, session_key, admin=True)
-        if not validated_session_key:
-            abort(403)
-
-        flight_id = data["flight-id"]
-
-        reservations_exist = reservations.find_one({"flight-id": flight_id})
-
-        if not reservations_exist:
-            flight.delete_one({"flight-id": flight_id})
-            return {"status": "success", "message": "Updates flight costs"}
-        else:
-            return {"status": "failure", "message": "Flight has active reservations!"}
-
-
-    except KeyError:
-        return {"status": "failure", "message": "Invalid parameters"}
 
 @app.route('/flight-info', methods=['POST'])
 def flight_info():
