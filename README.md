@@ -33,9 +33,6 @@ Whenever the administrator wants to perform an operation with administrator righ
 
 Sessions collection is the same as the admin_sessions but for the purpose of holding session keys for simple users.
 
-<h5>Note</h5>
-Βy having 2 different collections to keep session keys for ordinary users and administrators, we are sure that an ordinary user will not be able to perform an administrator function, since an administrator session key is required, which requires an administrator account login. By isolating users from administrators we ensure the integrity of the services for this potential risk.
-
 Flights collection contains all required information about a flight to be performed. The information of each flight is:
 * Flight id
 * Departure Airport
@@ -66,6 +63,13 @@ The information inside the collection is:
 All the ID fields inside collections are a custom uuid, instead of an ObjectId mongodb creates.
 This implementation allows us to change the ID structure to suit our needs.
 
+# Security
+Βy having 2 different collections to keep session keys for ordinary users and administrators, we are sure that an ordinary user will not be able to perform an administrator function, since an administrator session key is required, which requires an administrator account login. By isolating users from administrators we ensure the integrity of the services for this potential risk. 
+Also, regarding the authentication mechanism, the password is stored as an argon2 hash, ensuring the confidentiality of the password.
+
+The connection between the flask server and client is not encrypted using https.
+<br> <b>DO NOT</b> use on unsafe networks. 
+
 # Usage
 Τhe project is split into 3 parts, with 2 being functions for regular users and administrators, and the third being functions that provide support for the other 2 parts
 
@@ -75,7 +79,7 @@ This implementation allows us to change the ID structure to suit our needs.
 Τhere is no administrator signup function, since mongo database requirements require an administrator with manual entry.
 
 <h4>Login</h4>
-An administrator is able to perform login function by visiting /sys-login endpoint.
+An administrator is able to perform login function by visiting <b>/sys-login</b> endpoint.
 Τhe required fields are the name and password.
 <pre>
 { 
@@ -95,7 +99,7 @@ Response:
 <h4>For the rest of the functions it is also necessary to grant the session-key</h4>
 
 <h4>Signout</h4>
-An admin can signout by visiting /sys-signout endpoint, providing the following information:
+An admin can signout by visiting <b>/sys-signout</b> endpoint, providing the following information:
 <pre>
 {
   "username": "admin_username",
@@ -105,7 +109,7 @@ An admin can signout by visiting /sys-signout endpoint, providing the following 
 The result will be the removal of the provided session-key from admin_sessions collection, with the admin not being able to perform actions without logging in again.
 
 <h4>Create Flight</h4>
-Admin can create a flight using /create-flight endpoint providing the following information:
+Admin can create a flight using <b>/create-flight</b> endpoint providing the following information:
 <pre>
 {
   "departure-airport": "Athens",
@@ -127,7 +131,7 @@ Response:
 </pre>
 
 <h4>Update flight cost</h4>
-Using endpoint /update-flight-cost the admin is able to update the cost for economy and business tickets.
+Using endpoint <b>/update-flight-cost</b> the admin is able to update the cost for economy and business tickets.
 The message format must be as follows:
 <pre>
 {
@@ -148,7 +152,7 @@ Response:
 
 
 <h4>Delete flight</h4>
-By visiting /delete-flight endpoint the admin will be able to delete a flight from the database.
+By visiting <b>/delete-flight</b> endpoint the admin will be able to delete a flight from the database.
 He only needs to provide the flight id.
 
 Request message:
@@ -187,7 +191,7 @@ At last the normal response would be as follows:
 <h4>Search flights</h4>
 The search function is the same for both admins and normal users.
 The only difference is that the admin must provide a keyword "admin-search": True so the server will know and try to validate his session key from admin_sessions and not sessions.
-The endpoint is /search.
+The endpoint is <b>/search</b>.
 
 Then he may provide 3 more fields:
 * Departure airport
@@ -234,7 +238,7 @@ The format for the above states are as follows:
 </pre>
 
 <h4>Search flight information</h4>
-By visiting /flight-info and providing the flight-id admin is able to retrieve flight information.
+By visiting <b>/flight-info</b> and providing the flight-id admin is able to retrieve flight information.
 
 Request format:
 <pre>
