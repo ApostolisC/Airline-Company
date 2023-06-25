@@ -267,3 +267,87 @@ Response:
 }
 </pre>
 
+
+<h2>User functions</h2>
+
+<h4>Login</h4>
+User is able to login by visiting <b>/login</b> endpoint and provide the following information:
+<pre>
+{
+  "username": "users_email"
+  "password": "password"
+}  
+</pre>
+
+Response:
+<pre>
+{
+  "message": "Logged in!",
+  "session-key": "e3083174-cb85-4362-b2cc-edd271ba9710",
+  "status": "success"
+}
+</pre>
+
+<h4>Signup</h4>
+User can create an account via <b>/signup</b> endpoint, providing the following information:
+* Name
+* Surname
+* Email
+* Password
+* Date of birth
+* Country of origin
+* Passport number
+
+The format must be as follows:
+<pre>
+{
+  "name": "name1",
+  "surname": "surname1",
+  "email": "email1",
+  "password": "password1",
+  "dob": "xx/yy/zzz",
+  "coo": "country1"
+  "passport": "passport1"
+}
+</pre>
+
+Response:
+<pre>
+{
+  "status": "success", 
+  "message": "Account created!", 
+  "session-key": session_key
+}
+</pre>
+Now user is already logged in with his own session-key.
+<br> If the provided email already exists then the signup will fail, with the user getting the response:
+<pre>
+{
+  "status": "failure",
+  "message": "Email already exists!"
+}
+</pre>
+
+<h4>Signout</h4>
+User can signout from his session by visiting <b>/signout</b> endpoint and provide the following request:
+<pre>
+{
+  "username": "username1",
+  "session-key": "e3083174-cb85-4362-b2cc-edd271ba9710"
+}
+</pre>
+After that action, user will not be able to perform any actions before he performs login again.
+
+<h4>Search flights</h4>
+
+<h4>Flight information</h4>
+
+<h4>Flight reservation</h4>
+
+<h4>Reservations retrieving</h4>
+
+<h4>Reservation's information retrieving</h4>
+
+<h4>Reservation cancelation</h4>
+
+<h4>Account deletion</h4>
