@@ -10,11 +10,6 @@ from uuid import uuid4
 
 import uuid
 """
-steps to create mongodb
- docker pull mongo
- docker run -d -p 27017:27017 --name DigitalAirlines mongo
- docker start DigitalAirlines
- docker exec -it DigitalAirlines mongosh
 
 # TODO:
 
