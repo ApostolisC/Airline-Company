@@ -3,6 +3,22 @@
 # Introduction
 The purpose of the specific project is the creation of an information system for the provision of services similar to an airline company. Mongodb is used to maintain the necessary data and flask service for the interface between a client and the database, while these 2 services then run in a common container.
 
+# Terminology
+<h4>Client</h4>
+The system responsible for the communication between the flask server and the end user.
+
+<h4>Endpoint</h4>
+The path provided after the original (main) url. The purpose of the endpoint is to map different paths to different actions.
+
+<h4>Collection</h4>
+This project uses Mongodb. Mongodb does not have tables as sql. but have instead collections that are just json formatted data.
+
+<h4>Admin</h4>
+Admin or administrator is a role that can have access to the inside functions of the system. In our case the administrator is able to alter collections to create or delete data.
+
+<h4>Regular user - Simple user</h4>
+The person (or end user) that uses the services provided by the client and the flask server.
+
 # Database and Collections
 There are 7 collections inside the DigitalAirlines database. 
 * admins
@@ -81,6 +97,7 @@ The connection between the flask server and client is not encrypted using https.
 <h4>Login</h4>
 An administrator is able to perform login function by visiting <b>/sys-login</b> endpoint.
 Τhe required fields are the name and password.
+<br>
 <pre>
 { 
   "username": "admin_username",
@@ -88,6 +105,7 @@ An administrator is able to perform login function by visiting <b>/sys-login</b>
 }
 </pre>
 Response:
+<br>
 <pre>
 {
   "message": "Logged in!",
@@ -100,6 +118,7 @@ Response:
 
 <h4>Signout</h4>
 An admin can signout by visiting <b>/sys-signout</b> endpoint, providing the following information:
+<br>
 <pre>
 {
   "username": "admin_username",
@@ -110,6 +129,7 @@ The result will be the removal of the provided session-key from admin_sessions c
 
 <h4>Create Flight</h4>
 Admin can create a flight using <b>/create-flight</b> endpoint providing the following information:
+<br>
 <pre>
 {
   "departure-airport": "Athens",
@@ -123,6 +143,7 @@ Admin can create a flight using <b>/create-flight</b> endpoint providing the fol
 </pre>
 
 Response:
+<br>
 <pre>
 {
   "status": "success", 
@@ -133,6 +154,7 @@ Response:
 <h4>Update flight cost</h4>
 Using endpoint <b>/update-flight-cost</b> the admin is able to update the cost for economy and business tickets.
 The message format must be as follows:
+<br>
 <pre>
 {
   "new-costs": {
@@ -143,6 +165,7 @@ The message format must be as follows:
 </pre>
 
 Response:
+<br>
 <pre>
 {
   "status": "success", 
@@ -156,6 +179,7 @@ By visiting <b>/delete-flight</b> endpoint the admin will be able to delete a fl
 He only needs to provide the flight id.
 
 Request message:
+<br>
 <pre>
 {
   "username": "admin_username",
@@ -165,6 +189,7 @@ Request message:
 </pre>
 
 If there are reservations for this flight, then the deletion will fail, with the admin getting the following response:
+<br>
 <pre>
 {
   "status": "failure", 
@@ -173,6 +198,7 @@ If there are reservations for this flight, then the deletion will fail, with the
 </pre>
 
 And in case the flight doesn't exist:
+<br>
 <pre>
 {
   "status": "failure", 
@@ -181,6 +207,7 @@ And in case the flight doesn't exist:
 </pre>
 
 At last the normal response would be as follows:
+<br>
 <pre>
 {
   "status": "success", 
@@ -207,6 +234,7 @@ The search will be possible only if:
 The format for the above states are as follows:
 
 1. Both departure and destination airports are provided
+<br>
 <pre>
 {
   "username": "admin_username",
@@ -217,6 +245,7 @@ The format for the above states are as follows:
 </pre>
 
 2. Only date is provided
+<br>
 <pre>
 {
   "username": "admin_username",
@@ -226,6 +255,7 @@ The format for the above states are as follows:
 </pre>
 
 3. All fields are provided
+<br>
 <pre>
 {
   "username": "admin_username",
@@ -237,6 +267,7 @@ The format for the above states are as follows:
 </pre>
 
 4. None of the fields is provided (Return all available flights)
+<br>
 <pre>
 {
   "username": "admin_username",
@@ -249,6 +280,7 @@ The format for the above states are as follows:
 By visiting <b>/flight-info</b> and providing the flight-id admin is able to retrieve flight information.
 
 Request format:
+<br>
 <pre>
 {
   "username": "admin_username",
@@ -258,6 +290,7 @@ Request format:
 </pre>
 
 Response:
+<br>
 <pre>
 {
   "flight-id": "flight_id",
@@ -280,6 +313,7 @@ Response:
 
 <h4>Login</h4>
 User is able to login by visiting <b>/login</b> endpoint and provide the following information:
+<br>
 <pre>
 {
   "username": "users_email"
@@ -288,6 +322,7 @@ User is able to login by visiting <b>/login</b> endpoint and provide the followi
 </pre>
 
 Response:
+<br>
 <pre>
 {
   "message": "Logged in!",
@@ -307,6 +342,7 @@ User can create an account via <b>/signup</b> endpoint, providing the following 
 * Passport number
 
 The format must be as follows:
+<br>
 <pre>
 {
   "name": "name1",
@@ -320,6 +356,7 @@ The format must be as follows:
 </pre>
 
 Response:
+<br>
 <pre>
 {
   "status": "success", 
@@ -329,6 +366,7 @@ Response:
 </pre>
 Now user is already logged in with his own session-key.
 <br> If the provided email already exists then the signup will fail, with the user getting the response:
+<br>
 <pre>
 {
   "status": "failure",
@@ -338,6 +376,7 @@ Now user is already logged in with his own session-key.
 
 <h4>Signout</h4>
 User can signout from his session by visiting <b>/signout</b> endpoint and provide the following request:
+<br>
 <pre>
 {
   "username": "username1",
@@ -352,6 +391,7 @@ The only difference is that the admin must also provide a keyword admin-search
 The format for the above states are as follows:
 
 1. Both departure and destination airports are provided
+<br>
 <pre>
 {
   "username": "username",
@@ -362,6 +402,7 @@ The format for the above states are as follows:
 </pre>
 
 2. Only date is provided
+<br>
 <pre>
 {
   "username": "username",
@@ -371,6 +412,7 @@ The format for the above states are as follows:
 </pre>
 
 3. All fields are provided
+<br>
 <pre>
 {
   "username": "username",
@@ -382,6 +424,7 @@ The format for the above states are as follows:
 </pre>
 
 4. None of the fields is provided (Return all available flights)
+<br>
 <pre>
 {
   "username": "username",
@@ -394,6 +437,7 @@ By visiting <b>/flight</b> endpoint user will be able to retrieve information ab
 Requirements are the flight id.
 
 Request format:
+<br>
 <pre>
 {
   "username": "username",
@@ -412,6 +456,7 @@ To create a flight reservation, user must submit the following information on <b
 * Reservation class
 
 Request format:
+<br>
 <pre>
 {
   "name": "name1",
@@ -427,6 +472,7 @@ The reservation class will either be business or economy.
 
 <h4>Reservations retrieving</h4>
 To retrieve all reservations, user will visit <b>/reservations</b> endpoint with only information his username and session-key as follows:
+<br>
 <pre>
 {
   "username": "username1",
@@ -436,6 +482,7 @@ To retrieve all reservations, user will visit <b>/reservations</b> endpoint with
 
 <h4>Reservation's information retrieving</h4>
 To retrieve reservation's information along with flight information attached to the reservation, user will visit <b>/reservation-info</b> endpoint providing the following values:
+<br>
 <pre>
 {
   "username": "username1",
@@ -458,6 +505,7 @@ The returned result will contain:
 Client can cancel his reservation by visiting <b>/cancel</b> endpoint, providing the reservation id to be canceled.
 
 Format:
+<br>
 <pre>
 {
   "username": "username1",
@@ -471,6 +519,7 @@ If the reservation doesn't exist an appropriate return message will be received.
 <h4>Account deletion</h4>
 Client can delete user's account via <b>/account-delete</b> endpoint providing only the username and the session-key.
 Format:
+<br>
 <pre>
 {
   "username": "username1",
