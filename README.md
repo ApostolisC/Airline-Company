@@ -209,6 +209,8 @@ The format for the above states are as follows:
 1. Both departure and destination airports are provided
 <pre>
 {
+  "username": "admin_username",
+  "session-key": "admin_session_key",
   "departure-airport": "Athens",
   "destination-airport": "Stockholm"
 }
@@ -217,6 +219,8 @@ The format for the above states are as follows:
 2. Only date is provided
 <pre>
 {
+  "username": "admin_username",
+  "session-key": "admin_session_key",
   "date": "27/12/2023"
 }
 </pre>
@@ -224,6 +228,8 @@ The format for the above states are as follows:
 3. All fields are provided
 <pre>
 {
+  "username": "admin_username",
+  "session-key": "admin_session_key",
   "departure-airport": "Athens",
   "destination-airport": "Stockholm",
   "date": "27/12/2023"
@@ -233,10 +239,12 @@ The format for the above states are as follows:
 4. None of the fields is provided (Return all available flights)
 <pre>
 {
-  
+  "username": "admin_username",
+  "session-key": "admin_session_key"
 }
 </pre>
 
+</pre>
 <h4>Search flight information</h4>
 By visiting <b>/flight-info</b> and providing the flight-id admin is able to retrieve flight information.
 
@@ -339,15 +347,133 @@ User can signout from his session by visiting <b>/signout</b> endpoint and provi
 After that action, user will not be able to perform any actions before he performs login again.
 
 <h4>Search flights</h4>
+The function is the same for regular users and admins.
+The only difference is that the admin must also provide a keyword admin-search
+The format for the above states are as follows:
+
+1. Both departure and destination airports are provided
+<pre>
+{
+  "username": "username",
+  "session-key": "session_key",
+  "departure-airport": "Athens",
+  "destination-airport": "Stockholm"
+}
+</pre>
+
+2. Only date is provided
+<pre>
+{
+  "username": "username",
+  "session-key": "session_key",
+  "date": "27/12/2023"
+}
+</pre>
+
+3. All fields are provided
+<pre>
+{
+  "username": "username",
+  "session-key": "session_key",
+  "departure-airport": "Athens",
+  "destination-airport": "Stockholm",
+  "date": "27/12/2023"
+}
+</pre>
+
+4. None of the fields is provided (Return all available flights)
+<pre>
+{
+  "username": "username",
+  "session-key": "session_key"
+}
+</pre>
 
 <h4>Flight information</h4>
+By visiting <b>/flight</b> endpoint user will be able to retrieve information about a specific flight.
+Requirements are the flight id.
+
+Request format:
+<pre>
+{
+  "username": "username",
+  "session-key": "session_key",
+  "flight-id": "flight-id"
+}
+</pre>
 
 <h4>Flight reservation</h4>
+To create a flight reservation, user must submit the following information on <b>/flight-reservation</b> endpoint.
+* Name
+* Surname
+* Passport number
+* Date of birth
+* Email
+* Reservation class
+
+Request format:
+<pre>
+{
+  "name": "name1",
+  "surname": "surname1:,
+  "passport-number": "passport_number1",
+  "dob": "xx/yy/zzz",
+  "email": "email1",
+  "reservation-class": "class"
+}
+</pre>
+The reservation class will either be business or economy.
+
 
 <h4>Reservations retrieving</h4>
+To retrieve all reservations, user will visit <b>/reservations</b> endpoint with only information his username and session-key as follows:
+<pre>
+{
+  "username": "username1",
+  "session-key": "session-key"
+}
+</pre>
 
 <h4>Reservation's information retrieving</h4>
+To retrieve reservation's information along with flight information attached to the reservation, user will visit <b>/reservation-info</b> endpoint providing the following values:
+<pre>
+{
+  "username": "username1",
+  "session-key": "session-key",
+  "reservation-id": "reservation_id"
+</pre>
 
+The returned result will contain:
+* Departure airport
+* Destination airport
+* Date of the flight
+* Name
+* Surname
+* Passport number
+* Date of birth
+* Email
+* Reservation class
+  
 <h4>Reservation cancelation</h4>
+Client can cancel his reservation by visiting <b>/cancel</b> endpoint, providing the reservation id to be canceled.
+
+Format:
+<pre>
+{
+  "username": "username1",
+  "session-key": "session_key",
+  "reservation-id": "reservation_id"
+}
+</pre>
+
+If the reservation doesn't exist an appropriate return message will be received.
 
 <h4>Account deletion</h4>
+Client can delete user's account via <b>/account-delete</b> endpoint providing only the username and the session-key.
+Format:
+<pre>
+{
+  "username": "username1",
+  "session-key": "session_key"
+}
+</pre>
