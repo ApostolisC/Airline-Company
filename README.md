@@ -87,7 +87,9 @@ The connection between the flask server and client is not encrypted using https.
 <br> <b>DO NOT</b> use on unsafe networks. 
 
 # Usage
-Τhe project is split into 3 parts, with 2 being functions for regular users and administrators, and the third being functions that provide support for the other 2 parts
+Τhe project is split into 2 parts, with the first being the functions for regular users and and the second for administrators.
+<br>
+We will start with the Admin functions, since regular user's functions need some knowledge of the format the data are stored as.
 
 <h2>Admin functions</h2>
 
@@ -526,3 +528,22 @@ Format:
   "session-key": "session_key"
 }
 </pre>
+
+# Containerization 
+We have the following path format:
+
+* flask
+    * data
+    * service.py
+    * Dockerfile
+    * requirements.txt
+* mongodb
+    * data
+* docker-compose.yml
+
+First of all we need to download the official mongodb image.
+<br>Step 1.
+<pre>
+docker pull mongo
+</pre>
+
